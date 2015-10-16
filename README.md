@@ -1,6 +1,8 @@
 critical_cell
 =============
 
+[![Build Status](https://travis-ci.org/malcolmgreaves/critical_cell.svg?branch=master)](https://travis-ci.org/malcolmgreaves/critical_cell)
+
 Critical cell finding algorithm using functional programming in Scala.
 
 * Execute `./sbt test` to execute the tests.
