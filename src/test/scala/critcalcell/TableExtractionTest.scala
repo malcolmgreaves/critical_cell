@@ -2,13 +2,20 @@ package criticalcell
 
 import org.scalatest.FunSuite
 
-class ExampleTables extends FunSuite {
+class TableExtractionTest extends FunSuite {
 
   // Bring in the critical cell finding algorithm & types.
   import TableExtraction._
 
-  val criticalCell: Content =
+  //
+  // The data used in the tests.
+  //
+
+  val criticalCell: Cell =
     Str("Yes", 1, 1)
+
+  val expectedCriticalCell: Option[Cell] =
+    Some(criticalCell)
 
   val tWeatherDays: Table =
     Seq(
@@ -33,13 +40,29 @@ class ExampleTables extends FunSuite {
       Str("No", 3, 3)
     )
 
-  val expectedCriticalCell: Option[Content] =
-    Some(criticalCell)
+  val notWellFormedTable: Table =
+    Seq(
+      // headers
+      // Note now their locations in the table are staggered.
+      Str("TopRowCol", 0, 2),
+      Str("MiddleRowCol", 1, 1),
+      Str("BottomRowCol", 2, 0),
+      // data cells
+      // These also follow the star-stepping stagger of the headers.
+      Dbl(1.1, 1, 2),
+      Dbl(2.2, 2, 1),
+      Dbl(3.3, 2, 2)
+    )
 
-  test("Critical cell found in table") {
-    assert(findCritical(tWeatherDays) == expectedCriticalCell)
-  }
+  // 
+  // Functions to assist in testing.
+  //
 
+  /**
+   * mkShuffle accepts a seed, creates a pseudo-random number generator with it,
+   * and returns a function that is able to shuffle the order of Cells within a
+   * given Table instance.
+   */
   val mkShuffle: Long => Table => Table =
     seed => {
       val r = new scala.util.Random(seed)
@@ -50,6 +73,14 @@ class ExampleTables extends FunSuite {
           .map { case (cell, _) => cell }
     }
 
+  //
+  // Tests !
+  //
+
+  test("Critical cell found in table") {
+    assert(findCritical(tWeatherDays) == expectedCriticalCell)
+  }
+
   test("Critical found in shuffled table") {
     val shuffle = mkShuffle(System.currentTimeMillis)
     for (i <- 0 until 20) {
@@ -57,18 +88,6 @@ class ExampleTables extends FunSuite {
       assert(findCritical(s) == expectedCriticalCell)
     }
   }
-
-  val notWellFormedTable: Table =
-    Seq(
-      Str("TopRowCol", 0, 2),
-      Str("MiddleRowCol", 1, 1),
-      // row headers
-      Str("BottomRowCol", 2, 0),
-      // data cells
-      Dbl(1.1, 1, 2),
-      Dbl(2.2, 2, 1),
-      Dbl(3.3, 2, 2)
-    )
 
   test("Did not find critical cell in not well-formed table") {
     assert(findCritical(notWellFormedTable) == None)
@@ -81,7 +100,5 @@ class ExampleTables extends FunSuite {
       assert(findCritical(s) == None)
     }
   }
-
-  // test("Did not ")
 
 }

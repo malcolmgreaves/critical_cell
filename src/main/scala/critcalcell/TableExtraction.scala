@@ -2,35 +2,63 @@ package criticalcell
 
 object TableExtraction {
 
-  type FindCriticalCell = Table => Option[Content]
-  type Table = Seq[Content]
+  /**
+   * Function type for finding the critical cell, if it exists, within a table.
+   */
+  type FindCriticalCell = Table => Option[Cell]
 
-  sealed trait Content {
+  /*
+   * A table is a sequence of cells. These cells do not need to be in-order.
+   * The table also need not be well-formed.
+   */
+  type Table = Seq[Cell]
+
+  /**
+   * The abstract data type for a table cell.
+   * Every cell has its row and column indicies.
+   */
+  sealed trait Cell {
     def rawRow: Int
     def rawCol: Int
   }
-  object Content {
-    val toName: Content => String = {
+  object Cell {
+    /** Converts a cell into a string representation. */
+    val toName: Cell => String = {
       case Str(content, _, _) => content
       case Dbl(content, _, _) => content.toString
       case Empty(_, _)        => ""
     }
   }
 
-  case class Str(content: String, rawRow: Int, rawCol: Int) extends Content
-  case class Dbl(content: Double, rawRow: Int, rawCol: Int) extends Content
-  case class Empty(rawRow: Int, rawCol: Int) extends Content
+  /** Cell implementation when its content is a string. */
+  case class Str(content: String, rawRow: Int, rawCol: Int) extends Cell
+
+  /** Cell implementation when its content is a real-valued number. */
+  case class Dbl(content: Double, rawRow: Int, rawCol: Int) extends Cell
+
+  /** Cell instance for something that contains no content. */
+  case class Empty(rawRow: Int, rawCol: Int) extends Cell
   object Empty {
+    /** An empty cell with row and column indicies equal to 0. */
     val zero = Empty(0, 0)
   }
 
+  /** Algorithm configuration: what row and column to start search. */
   case class Start(row: Int, col: Int)
   object Start {
+    /** The default searching position is from (0, 0). */
     val default = Start(row = 0, col = 0)
   }
 
+  /** Type documentation for number of cells function. */
   type IsRow = Boolean
 
+  /**
+   * Function for finding the number of cells in the table on a particular axis.
+   * numberOfCells iterates through the table, looking at cells that are in a
+   * particular row (or column if IsRow=false). The evaluated Int is the number
+   * of cells found in the table's row (or column).
+   */
   val numberOfCells: Table => IsRow => Start => Int =
     table => isRow => start =>
       if (isRow)
@@ -51,24 +79,24 @@ object TableExtraction {
               sameRowOrCol
         }
 
+  /** Algorithm configuration: upper bound on row and column during search. */
   case class Max(row: Int, col: Int)
   object Max {
+    /** Default maximum row and column to consider is (3,3). */
     val default = Max(row = 3, col = 3)
   }
 
+  /** Algorithm configuration: the Start and Max instances for search. */
   case class Conf(start: Start, max: Max)
   object Conf {
-    // In the event that we fail to get the correct critical cell,
-    // we default to assuming it exists at (3,3).
+    /** Default configuration uses the defaults from Start and Max. */
     val default = Conf(start = Start.default, max = Max.default)
   }
 
-  /**
-   * Assumption:
-   *  -- The table is at least a 3x3
-   *  -- The critical cell exists within the first 3 rows and 3 olumns.
-   */
+  /** FindCriticalCell function using the default configuration. */
   lazy val findCritical: FindCriticalCell =
+    // Note the "lazy val" because we use "findCriticalUsing" before it is
+    // defined. The lazy modifier delays initialization until absolutely needed.
     findCriticalUsing(Conf.default)
 
   /**
@@ -79,6 +107,7 @@ object TableExtraction {
   val findCriticalUsing: Conf => FindCriticalCell =
     conf => table => {
 
+        /** Method for finding the critical cell inidices. */
         def findIndex(
           numCells: Start => Int,
           max:      Int,
