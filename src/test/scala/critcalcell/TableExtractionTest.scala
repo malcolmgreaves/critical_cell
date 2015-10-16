@@ -12,6 +12,7 @@ class ExampleTables extends FunSuite {
 
   val tWeatherDays: Table =
     Seq(
+      Empty.zero,
       // column headers
       Str("Raining?", 0, 1),
       Str("Hot?", 0, 2),
@@ -35,7 +36,7 @@ class ExampleTables extends FunSuite {
   val expectedCriticalCell: Option[Content] =
     Some(criticalCell)
 
-  test("Found expected critical cell in table") {
+  test("Critical cell found in table") {
     assert(findCritical(tWeatherDays) == expectedCriticalCell)
   }
 
@@ -57,22 +58,30 @@ class ExampleTables extends FunSuite {
     }
   }
 
-  val updatedFindCritical: FindCriticalCell =
-    findCriticalUsing(Conf.default.copy(start = Start(0, 0)))
+  val notWellFormedTable: Table =
+    Seq(
+      Str("TopRowCol", 0, 2),
+      Str("MiddleRowCol", 1, 1),
+      // row headers
+      Str("BottomRowCol", 2, 0),
+      // data cells
+      Dbl(1.1, 1, 2),
+      Dbl(2.2, 2, 1),
+      Dbl(3.3, 2, 2)
+    )
 
-  val tWithEmpty: Table =
-    tWeatherDays :+ Empty.zero
-
-  test("Critical found in table with empty added") {
-    assert(updatedFindCritical(tWithEmpty) == expectedCriticalCell)
+  test("Did not find critical cell in not well-formed table") {
+    assert(findCritical(notWellFormedTable) == None)
   }
 
-  test("Critical found in shuffled table with empty added") {
+  test("Did not find critical in shuffled non WFT") {
     val shuffle = mkShuffle(System.currentTimeMillis)
     for (i <- 0 until 20) {
-      val s = shuffle(tWithEmpty)
-      assert(updatedFindCritical(s) == expectedCriticalCell)
+      val s = shuffle(notWellFormedTable)
+      assert(findCritical(s) == None)
     }
   }
+
+  // test("Did not ")
 
 }

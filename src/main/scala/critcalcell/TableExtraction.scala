@@ -26,7 +26,7 @@ object TableExtraction {
 
   case class Start(row: Int, col: Int)
   object Start {
-    val default = Start(row = 1, col = 1)
+    val default = Start(row = 0, col = 0)
   }
 
   type IsRow = Boolean
@@ -68,9 +68,15 @@ object TableExtraction {
    *  -- The table is at least a 3x3
    *  -- The critical cell exists within the first 3 rows and 3 olumns.
    */
-  lazy val findCritical: FindCriticalCell = findCriticalUsing(Conf.default)
+  lazy val findCritical: FindCriticalCell =
+    findCriticalUsing(Conf.default)
 
-  val findCriticalUsing: Conf => Table => Option[Content] =
+  /**
+   * Using the configuration, produce a function capable of finding a table's
+   * critical cell. This function should evaluate to Some if the input table
+   * is well-formed and None otherwise.
+   */
+  val findCriticalUsing: Conf => FindCriticalCell =
     conf => table => {
 
         def findIndex(
