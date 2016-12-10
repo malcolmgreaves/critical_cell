@@ -6,4 +6,4 @@ jdk:
 sbt_args: -sbt-version 0.13.8
 script:
  - sbt test
-
+after_success: "sbt coverage test coveralls"
