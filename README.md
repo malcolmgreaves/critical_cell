@@ -20,7 +20,7 @@ Critical cell finding algorithm using functional programming in Scala.
     )
     findCritical(table) match {
       case Some(c) => 
-        println(s"Found critical cell in table: c")
+        println(s"Found critical cell in table: $c")
       case None =>
         println("No critical cell found in table.")
     }
